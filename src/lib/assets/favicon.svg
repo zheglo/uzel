@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="_Слой_1" data-name="Слой_1" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 128 128">
+  <!-- Generator: Adobe Illustrator 29.0.1, SVG Export Plug-In . SVG Version: 2.1.0 Build 192)  -->
+  <defs>
+    <style>
+      .st0, .st1 {
+        fill-rule: evenodd;
+      }
+
+      .st1 {
+        fill: #fb0505;
+      }
+    </style>
+  </defs>
+  <path class="st1" d="M109.4,64c0,25.2-20.3,45.4-45.4,45.4s-45.4-20.3-45.4-45.4,20.3-45.4,45.4-45.4,45.4,20.3,45.4,45.4ZM86.7,64c0,12.5-10.2,22.7-22.7,22.7s-22.7-10.2-22.7-22.7,10.2-22.7,22.7-22.7,22.7,10,22.7,22.7Z"/>
+  <path class="st0" d="M60.6,6.8h8v114.4h-8V6.8Z"/>
+</svg>
