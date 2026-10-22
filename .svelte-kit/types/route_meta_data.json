@@ -2,11 +2,7 @@
 	"/": [],
 	"/about": [],
 	"/demo": [],
-	"/demo/better-auth": [
-		"src/routes/demo/better-auth/+page.server.ts"
-	],
-	"/demo/better-auth/login": [
-		"src/routes/demo/better-auth/login/+page.server.ts"
-	],
+	"/demo/better-auth": ["src/routes/demo/better-auth/+page.server.ts"],
+	"/demo/better-auth/login": ["src/routes/demo/better-auth/login/+page.server.ts"],
 	"/hero": []
 }

@@ -39,7 +39,7 @@
 // 		rules: {}
 // 	}
 // );
-i
+i;
 import prettier from 'eslint-config-prettier';
 import path from 'node:path';
 import js from '@eslint/js';
@@ -50,30 +50,30 @@ import ts from 'typescript-eslint';
 const gitignorePath = path.resolve(import.meta.dirname, '.gitignore');
 
 export default defineConfig(
-  includeIgnoreFile(gitignorePath),
-  js.configs.recommended,
-  ts.configs.recommended,
-  prettier, // отключает конфликтующие правила после остальных
-  {
-    languageOptions: {
-      globals: { ...globals.browser, ...globals.node },
-    },
-    rules: {
-      'no-undef': 'off',
-    },
-  },
-  // Конфигурация специально для .svelte файлов (Svelte 5)
-  {
-    files: ['**/*.svelte', '**/*.svelte.ts', '**/*.svelte.js'],
-    plugins: ['svelte'],
-    processor: 'svelte/svelte', // <-- ключ: говорит ESLint, что это Svelte-файлы
-    languageOptions: {
-      parserOptions: {
-        projectService: true,
-        extraFileExtensions: ['.svelte'],
-      },
-    },
-    // Здесь можно добавлять правила только для Svelte, если нужно
-    rules: {},
-  }
+	includeIgnoreFile(gitignorePath),
+	js.configs.recommended,
+	ts.configs.recommended,
+	prettier, // отключает конфликтующие правила после остальных
+	{
+		languageOptions: {
+			globals: { ...globals.browser, ...globals.node }
+		},
+		rules: {
+			'no-undef': 'off'
+		}
+	},
+	// Конфигурация специально для .svelte файлов (Svelte 5)
+	{
+		files: ['**/*.svelte', '**/*.svelte.ts', '**/*.svelte.js'],
+		plugins: ['svelte'],
+		processor: 'svelte/svelte', // <-- ключ: говорит ESLint, что это Svelte-файлы
+		languageOptions: {
+			parserOptions: {
+				projectService: true,
+				extraFileExtensions: ['.svelte']
+			}
+		},
+		// Здесь можно добавлять правила только для Svelte, если нужно
+		rules: {}
+	}
 );

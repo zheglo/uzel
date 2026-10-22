@@ -2,14 +2,11 @@ import { defineConfig, presetWind3 } from 'unocss';
 import presetRemToPx from '@unocss/preset-rem-to-px';
 
 export default defineConfig({
-  presets: [
-    presetWind3(),
-    presetRemToPx()
-  ],
+	presets: [presetWind3(), presetRemToPx()],
 
-  preflights: [
-    {
-      getCSS: () => `
+	preflights: [
+		{
+			getCSS: () => `
         *,
         ::before,
         ::after {
@@ -59,15 +56,15 @@ export default defineConfig({
         h1, h2, h3, h4, h5, h6 {
           font-family: 'Montserrat', sans-serif;
         }
-      `,
-    },
-  ],
+      `
+		}
+	],
 
-  theme: {
-    fontFamily: {
-      sans: ['"Montserrat"', 'sans-serif'],
-      serif: ['"Playfair Display"', 'serif'],
-      local: ['"Magical Childhood Regular"', 'serif'],
-    }
-  },
+	theme: {
+		fontFamily: {
+			sans: ['"Montserrat"', 'sans-serif'],
+			serif: ['"Playfair Display"', 'serif'],
+			local: ['"Magical Childhood Regular"', 'serif']
+		}
+	}
 });

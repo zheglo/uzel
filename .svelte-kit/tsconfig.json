@@ -1,69 +1,28 @@
 {
 	"compilerOptions": {
 		"paths": {
-			"~fonts": [
-				"../src/lib/fonts"
-			],
-			"~fonts/*": [
-				"../src/lib/fonts/*"
-			],
-			"~components": [
-				"../src/components"
-			],
-			"~components/*": [
-				"../src/components/*"
-			],
-			"~routes": [
-				"../src/routes"
-			],
-			"~routes/*": [
-				"../src/routes/*"
-			],
-			"~db": [
-				"../src/server/db"
-			],
-			"~db/*": [
-				"../src/server/db/*"
-			],
-			"~lib": [
-				"../src/lib"
-			],
-			"~lib/*": [
-				"../src/lib/*"
-			],
-			"~assets": [
-				"../src/lib/assets"
-			],
-			"~assets/*": [
-				"../src/lib/assets/*"
-			],
-			"~animations": [
-				"../src/lib/animations"
-			],
-			"~animations/*": [
-				"../src/lib/animations/*"
-			],
-			"$lib": [
-				"../src/lib"
-			],
-			"$lib/*": [
-				"../src/lib/*"
-			],
-			"$app/types": [
-				"./types/index.d.ts"
-			]
+			"~fonts": ["../src/lib/fonts"],
+			"~fonts/*": ["../src/lib/fonts/*"],
+			"~components": ["../src/components"],
+			"~components/*": ["../src/components/*"],
+			"~routes": ["../src/routes"],
+			"~routes/*": ["../src/routes/*"],
+			"~db": ["../src/server/db"],
+			"~db/*": ["../src/server/db/*"],
+			"~lib": ["../src/lib"],
+			"~lib/*": ["../src/lib/*"],
+			"~assets": ["../src/lib/assets"],
+			"~assets/*": ["../src/lib/assets/*"],
+			"~animations": ["../src/lib/animations"],
+			"~animations/*": ["../src/lib/animations/*"],
+			"$lib": ["../src/lib"],
+			"$lib/*": ["../src/lib/*"],
+			"$app/types": ["./types/index.d.ts"]
 		},
-		"rootDirs": [
-			"..",
-			"./types"
-		],
+		"rootDirs": ["..", "./types"],
 		"verbatimModuleSyntax": true,
 		"isolatedModules": true,
-		"lib": [
-			"esnext",
-			"DOM",
-			"DOM.Iterable"
-		],
+		"lib": ["esnext", "DOM", "DOM.Iterable"],
 		"moduleResolution": "bundler",
 		"module": "esnext",
 		"noEmit": true,

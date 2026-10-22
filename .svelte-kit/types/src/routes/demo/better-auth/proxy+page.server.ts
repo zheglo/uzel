@@ -2,7 +2,7 @@
 import { redirect } from '@sveltejs/kit';
 import type { Actions } from './$types';
 import type { PageServerLoad } from './$types';
-import { auth } from '$lib/server/auth';
+import { auth } from '#lib/server/auth.js';
 
 export const load = (event: Parameters<PageServerLoad>[0]) => {
 	if (!event.locals.user) {
@@ -19,4 +19,4 @@ export const actions = {
 		return redirect(302, '/demo/better-auth/login');
 	}
 };
-;null as any as Actions;
+null as any as Actions;

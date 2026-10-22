@@ -1,7 +1,7 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions } from './$types';
 import type { PageServerLoad } from './$types';
-import { auth } from '$lib/server/auth';
+import { auth } from '#lib/server/auth.js';
 import { APIError } from 'better-auth/api';
 
 export const load: PageServerLoad = (event) => {
@@ -57,5 +57,5 @@ export const actions: Actions = {
 		}
 
 		return redirect(302, '/demo/better-auth');
-	},
+	}
 };
