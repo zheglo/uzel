@@ -5,9 +5,7 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
 	plugins: [
-		UnoCSS({
-			configFile: '../uno.config.ts',
-		}),
+		UnoCSS(),
 
 		sveltekit({
 			compilerOptions: {

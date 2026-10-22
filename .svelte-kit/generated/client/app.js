@@ -23,11 +23,11 @@ export const server_loads = [];
 
 export const dictionary = {
 		"/": [2],
-		"/demo": [3],
-		"/demo/better-auth": [~4],
-		"/demo/better-auth/login": [~5],
-		"/hero": [6],
-		"/jubilee": [7]
+		"/about": [3],
+		"/demo": [4],
+		"/demo/better-auth": [~5],
+		"/demo/better-auth/login": [~6],
+		"/hero": [7]
 	};
 
 export const hooks = {
