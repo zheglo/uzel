@@ -19,4 +19,4 @@ export const actions = {
 		return redirect(302, '/demo/better-auth/login');
 	}
 };
-null as any as Actions;
+;null as any as Actions;

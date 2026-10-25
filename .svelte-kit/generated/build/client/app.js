@@ -14,35 +14,26 @@ export const nodes = [
 export const server_loads = [];
 
 export const dictionary = {
-	'/': [2],
-	'/about': [3],
-	'/demo': [4],
-	'/demo/better-auth': [~5],
-	'/demo/better-auth/login': [~6],
-	'/hero': [7]
-};
+		"/": [2],
+		"/about": [3],
+		"/demo": [4],
+		"/demo/better-auth": [~5],
+		"/demo/better-auth/login": [~6],
+		"/hero": [7]
+	};
 
 export const hooks = {
-	handleError: ({ kind, error }) => {
-		if (kind === 'unknown') {
-			console.error(error);
-		}
-	},
-
-	reroute: () => {},
+	handleError: (({ kind, error }) => { if (kind === 'unknown') { console.error(error); } }),
+	
+	reroute: (() => {}),
 	transport: {}
 };
 
-export const decoders = Object.fromEntries(
-	Object.entries(hooks.transport).map(([k, v]) => [k, v.decode])
-);
-export const encoders = Object.fromEntries(
-	Object.entries(hooks.transport).map(([k, v]) => [k, v.encode])
-);
+export const decoders = Object.fromEntries(Object.entries(hooks.transport).map(([k, v]) => [k, v.decode]));
+export const encoders = Object.fromEntries(Object.entries(hooks.transport).map(([k, v]) => [k, v.encode]));
 
 export const hash = false;
 
 export const decode = (type, value) => decoders[type](value);
 
-export const get_error_template = () =>
-	import('../shared/error-template.js').then((m) => m.default);
+export const get_error_template = () => import('../shared/error-template.js').then(m => m.default);

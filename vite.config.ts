@@ -22,7 +22,8 @@ export default defineConfig({
 				'~db': './src/server/db',
 				'~lib': './src/lib',
 				'~assets': './src/lib/assets',
-				'~animations': './src/lib/animations'
+				'~animations': './src/lib/animations',
+				'~motion': './src/lib/motion'
 			}
 		})
 	]
