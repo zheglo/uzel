@@ -8,23 +8,8 @@ export default defineConfig({
 		UnoCSS(),
 
 		sveltekit({
-			compilerOptions: {
-				// Force runes mode for the project, except for libraries. Can be removed in svelte 6.
-				runes: ({ filename }) =>
-					filename.split(/[/\\]/).includes('node_modules') ? undefined : true
-			},
-
-			adapter: adapter(),
-			alias: {
-				'~fonts': './src/lib/fonts',
-				'~components': './src/components',
-				'~routes': './src/routes',
-				'~db': './src/server/db',
-				'~lib': './src/lib',
-				'~assets': './src/lib/assets',
-				'~animations': './src/lib/animations',
-				'~motion': './src/lib/motion'
-			}
+			compilerOptions: { experimental: { async: true }},
+			adapter: adapter()
 		})
 	]
 });
