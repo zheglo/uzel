@@ -1,0 +1,1 @@
+import{g as e,m as t}from"../chunks/CXgMx_bt.js";import"../chunks/DRLFVFLf.js";var n=e(`<div></div>`);function r(e){var r=n();t(e,r)}export{r as component};
