@@ -1,1 +1,0 @@
-{"version":3,"file":"_page.svelte.js","names":[],"sources":["../../../../../src/routes/hero/+page.svelte"],"sourcesContent":["<script lang=\"ts\">\n\n</script>\n\n<section class=\"relative h-[100dvh] w-[100dvw] flex items-center justify-center\">\n\t\n</section>\n"],"mappings":";;AAAA,SAAA,MAAA,YAAA"}
