@@ -14,26 +14,33 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Deploy over SSH
-        uses: appleboy/ssh-action@v1.2.5
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          port: ${{ secrets.SSH_PORT }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          version: '1.8.4'
-          script: |
-            set -e
-            cd /var/www/uzel
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/uzel_deploy
+          chmod 600 ~/.ssh/uzel_deploy
 
-            if [ ! -d repo/.git ]; then
-              git clone git@github.com:zheglo/uzel.git repo
-            fi
+          ssh -i ~/.ssh/uzel_deploy \
+            -p "$SSH_PORT" \
+            -o StrictHostKeyChecking=no \
+            "$SSH_USER@$SSH_HOST" <<'EOF'
+          set -e
+          cd /var/www/uzel
 
-            cd repo
-            git fetch origin master
-            git reset --hard origin/master
+          if [ ! -d repo/.git ]; then
+            git clone git@github.com:zheglo/uzel.git repo
+          fi
 
-            corepack pnpm@12.14.0 install --frozen-lockfile
-            corepack pnpm@12.14.0 build
+          cd repo
+          git fetch origin master
+          git reset --hard origin/master
 
-            pm2 startOrRestart /var/www/uzel/repo/ecosystem.config.cjs --update-env
+          corepack pnpm@12.14.0 install --frozen-lockfile
+          corepack pnpm@12.14.0 build
+
+          pm2 startOrRestart /var/www/uzel/repo/ecosystem.config.cjs --update-env
+          EOF
