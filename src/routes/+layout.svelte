@@ -5,6 +5,9 @@
 	import { locales, localizeHref } from '#lib/paraglide/runtime.js';
 	import favicon from '#lib/assets/favicon.svg';
 	import type { LayoutProps } from './$types';
+	import '#lib/styles/global.css';
+	import '@fontsource-variable/montserrat';
+	import '@fontsource-variable/playfair-display';
 
 	let { children }: LayoutProps = $props();
 </script>

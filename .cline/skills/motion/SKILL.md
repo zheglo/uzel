@@ -1,5 +1,5 @@
 ---
-name: motion-svelte
+name: motion
 description: Интеграция ванильного JavaScript API Motion (motion.dev) со Svelte 5 и SvelteKit. Использовать при адаптации примеров Motion, создании анимаций через {@attach ...}, работе с последовательностями, SVG, scroll/inView и очисткой ресурсов.
 ---
 
@@ -223,3 +223,6 @@ HTMLElement, SVGElement или более конкретный тип.
 
 Не разбирай каждую строку без просьбы пользователя.
 Обновляй HANDOFF.md согласно AGENTS.md.
+
+При размещении кода анимаций соблюдай структуру
+из раздела «Анимации» в AGENTS.md.
