@@ -8,6 +8,23 @@
 	import '#lib/styles/global.css';
 	import '@fontsource-variable/montserrat';
 	import '@fontsource-variable/playfair-display';
+	import Navigation from '#lib/components/Navigation.svelte';
+	import Logo from '#lib/components/Logo.svelte';
+
+	import { setContext } from 'svelte';
+
+	import {
+		navigationIntroKey,
+		type NavigationIntroState
+	} from '#lib/motion/navigation/context.ts';
+
+	const navigationIntro = $state<NavigationIntroState>({
+		opacity: 0,
+		logoVisible: false,
+		heroVisible: true
+	});
+
+	setContext(navigationIntroKey, navigationIntro);
 
 	let { children }: LayoutProps = $props();
 </script>
@@ -17,6 +34,10 @@
 </svelte:head>
 
 {@render children()}
+
+<Logo />
+
+<Navigation />
 
 <div style="display:none">
 	{#each locales as locale (locale)}

@@ -6,6 +6,14 @@
   font-display: swap;
 }
 
+@font-face {
+  font-family: 'LettrGoth12CBT';
+  src: url('../fonts/LettrGoth12CBT.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 *,
 ::before,
 ::after {

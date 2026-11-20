@@ -11,7 +11,8 @@ export default defineConfig({
     fontFamily: {
       sans: '"Montserrat Variable", sans-serif',
       serif: '"Playfair Display Variable", serif',
-      local: '"Magical Childhood Regular", serif'
+      local: '"Magical Childhood Regular", serif',
+      mono: '"LettrGoth12CBT", serif'
     }
   }
 });
