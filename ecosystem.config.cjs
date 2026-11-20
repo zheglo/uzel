@@ -2,8 +2,8 @@ module.exports = {
   apps: [
     {
       name: 'uzel',
-      cwd: '/var/www/uzel/repo',
-      script: 'build/index.js',
+      cwd: '/var/www/uzel/current',
+      script: '/var/www/uzel/current/build/index.js',
       instances: 1,
       exec_mode: 'fork',
       autorestart: true,

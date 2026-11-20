@@ -5,6 +5,9 @@ on:
     branches: [master]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 concurrency:
   group: uzel-deploy
   cancel-in-progress: false
@@ -12,39 +15,166 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
+    env:
+      RELEASE_ID: ${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+
     steps:
-      - name: Deploy over SSH
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24.18.0'
+
+      - name: Install pnpm
+        run: npm install --global pnpm@12.14.0
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check
+        run: pnpm check
+
+      - name: Build
+        run: pnpm build
+
+      - name: Package application
+        run: |
+          tar -czf release.tar.gz \
+            build \
+            package.json \
+            pnpm-lock.yaml \
+            pnpm-workspace.yaml \
+            ecosystem.config.cjs
+
+      - name: Configure SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/uzel_deploy
+          chmod 600 ~/.ssh/uzel_deploy
+
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Upload application
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_USER: ${{ secrets.SSH_USER }}
           SSH_PORT: ${{ secrets.SSH_PORT }}
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
         run: |
-          mkdir -p ~/.ssh
-          echo "$SSH_PRIVATE_KEY" > ~/.ssh/uzel_deploy
-          chmod 600 ~/.ssh/uzel_deploy
-
-          echo "$SSH_KNOWN_HOSTS" >> ~/.ssh/known_hosts
-          chmod 600 ~/.ssh/known_hosts
-
           ssh -i ~/.ssh/uzel_deploy \
             -p "$SSH_PORT" \
+            -o BatchMode=yes \
             -o StrictHostKeyChecking=yes \
-            "$SSH_USER@$SSH_HOST" <<'EOF'
-          set -e
-          cd /var/www/uzel
+            "$SSH_USER@$SSH_HOST" \
+            'mkdir -p /var/www/uzel/releases'
 
-          if [ ! -d repo/.git ]; then
-            git clone git@github.com:zheglo/uzel.git repo
+          scp -i ~/.ssh/uzel_deploy \
+            -P "$SSH_PORT" \
+            -o BatchMode=yes \
+            -o StrictHostKeyChecking=yes \
+            release.tar.gz \
+            "$SSH_USER@$SSH_HOST:/var/www/uzel/releases/$RELEASE_ID.tar.gz"
+
+      - name: Activate release
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+        run: |
+          ssh -i ~/.ssh/uzel_deploy \
+            -p "$SSH_PORT" \
+            -o BatchMode=yes \
+            -o StrictHostKeyChecking=yes \
+            "$SSH_USER@$SSH_HOST" \
+            bash -s -- "$RELEASE_ID" <<'EOF'
+          set -euo pipefail
+
+          release_id="$1"
+          base=/var/www/uzel
+          release="$base/releases/$release_id"
+
+          if [ "$(node --version)" != "v24.18.0" ]; then
+            echo "Expected Node.js v24.18.0 in the SSH environment."
+            node --version
+            exit 1
           fi
 
-          cd repo
-          git fetch origin master
-          git reset --hard origin/master
+          command -v pm2 >/dev/null
 
-          corepack pnpm@12.14.0 install --frozen-lockfile
-          corepack pnpm@12.14.0 build
+          mkdir "$release"
+          tar -xzf "$base/releases/$release_id.tar.gz" -C "$release"
 
-          pm2 startOrRestart /var/www/uzel/repo/ecosystem.config.cjs --update-env
+          cd "$release"
+
+          corepack pnpm@12.14.0 install \
+            --prod \
+            --frozen-lockfile \
+            --ignore-scripts
+
+          test -f build/index.js
+
+          if [ -e "$base/current" ] && [ ! -L "$base/current" ]; then
+            echo "$base/current exists and is not a symbolic link."
+            exit 1
+          fi
+
+          ln -sfn "$release" "$base/current.next"
+          mv -Tf "$base/current.next" "$base/current"
+
+          expected_script="$base/current/build/index.js"
+
+          actual_script="$(
+            pm2 jlist | node -e '
+              let input = "";
+
+              process.stdin.on("data", (chunk) => {
+                input += chunk;
+              });
+
+              process.stdin.on("end", () => {
+                const app = JSON.parse(input).find(
+                  (item) => item.name === "uzel"
+                );
+
+                process.stdout.write(
+                  app?.pm2_env?.pm_exec_path ?? ""
+                );
+              });
+            '
+          )"
+
+          if [ -n "$actual_script" ] && [ "$actual_script" != "$expected_script" ]; then
+            pm2 delete uzel
+          fi
+
+          pm2 startOrRestart \
+            "$base/current/ecosystem.config.cjs" \
+            --only uzel \
+            --update-env
+
+          healthy=false
+
+          for attempt in $(seq 1 20); do
+            if curl --fail --silent --output /dev/null \
+              http://127.0.0.1:3101/; then
+              healthy=true
+              break
+            fi
+
+            sleep 1
+          done
+
+          if [ "$healthy" != true ]; then
+            pm2 logs uzel --lines 50 --nostream
+            exit 1
+          fi
+
+          pm2 save
           EOF
