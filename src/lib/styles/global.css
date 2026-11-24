@@ -50,3 +50,14 @@ select,
 textarea {
   font: inherit;
 }
+
+:root {
+  --screen-split: 60%;
+  --screen-line-width: min(32px, 1.25vw);
+}
+
+@media (max-width: 600px) {
+  :root {
+    --screen-line-width: 7.5px;
+  }
+}

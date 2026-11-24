@@ -6,22 +6,14 @@
   <div
     class="absolute inset-y-0 left-0 w-[60%] bg-[#DBB333]"
     aria-hidden="true"
-  ></div>
+  >
+    <div
+      class="pointer-events-none absolute inset-y-0 right-0 w-[var(--screen-line-width)] bg-black"
+    ></div>
+  </div>
 
   <div
     class="absolute inset-y-0 right-0 w-[40%] bg-[#C1272D]"
     aria-hidden="true"
-  >
-    <div
-      class="pointer-events-none absolute inset-y-0 right-full w-[min(32px,1.25vw)] bg-black"
-    ></div>
-  </div>
+  ></div>
 </section>
-
-<style>
-  @media (max-width: 600px) and (orientation: portrait) {
-    .about-composition {
-      width: 60vw;
-    }
-  }
-</style>
