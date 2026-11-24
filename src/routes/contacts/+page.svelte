@@ -1,7 +1,7 @@
 <section
-  id="about"
-  class="relative min-h-[100dvh] overflow-hidden"
-  aria-label="О нас"
+  id="contacts"
+  class="relative h-[100dvh] w-full"
+  aria-label="Контакты"
 >
   <div
     class="absolute inset-y-0 left-0 w-[60%] bg-[#DBB333]"
@@ -11,14 +11,9 @@
   <div
     class="absolute inset-y-0 right-0 w-[40%] bg-[#C1272D]"
     aria-hidden="true"
-  ></div>
-
-  <div
-    class="about-composition pointer-events-none absolute inset-y-0 left-1/2 w-[min(902px,35.234375vw)] -translate-x-1/2"
-    aria-hidden="true"
   >
     <div
-      class="absolute inset-y-0 left-[calc(674/902*100%)] w-[calc(32/902*100%)] bg-black"
+      class="pointer-events-none absolute inset-y-0 right-full w-[min(32px,1.25vw)] bg-black"
     ></div>
   </div>
 </section>

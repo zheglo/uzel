@@ -17,6 +17,10 @@ const STRIP = 'inset(25% 0% 25% 0%)';
 const LOGO_GAP = 0;
 const HAMBURGER_TOP = 0;
 
+const DOCK_REFERENCE_LOGO_SIZE = 128;
+const DOCK_REFERENCE_HEADING_WIDTH = 430;
+const LEFT_SCREEN_RATIO = 0.6;
+
 type MenuState =
   | 'hero'
   | 'intro'
@@ -184,12 +188,42 @@ export function createSectionTransition({
       const visibleHeight =
         menuRect.height - slot.height * 0.5;
 
+      // Исходный масштаб сворачивания меню в гамбургер.
       const scale = slot.height / visibleHeight;
+
+      const dockLeft = logoRect
+        ? logoRect.right + LOGO_GAP
+        : slot.left;
+
+      const viewportWidth =
+        document.documentElement.clientWidth;
+
+      const availableWidth = Math.max(
+        0,
+        viewportWidth * LEFT_SCREEN_RATIO - dockLeft
+      );
+
+      // Размер закреплённой плашки пропорционален Logo.
+      const preferredDockWidth = logoRect
+        ? logoRect.width *
+          DOCK_REFERENCE_HEADING_WIDTH /
+          DOCK_REFERENCE_LOGO_SIZE
+        : slot.width;
+
+      const dockWidth = Math.min(
+        preferredDockWidth,
+        availableWidth
+      );
+
+      // Общий дополнительный масштаб плашки и гамбургера.
+      const dockScale = slot.width > 0
+        ? dockWidth / slot.width
+        : 1;
 
       const hamburgerVisibleTop =
         menuRect.top +
         menuRect.height / 2 -
-        slot.height / 2;
+        slot.height * dockScale / 2;
 
       return {
         left: slot.left - navRect.left,
@@ -198,10 +232,9 @@ export function createSectionTransition({
         width: slot.width,
         height: slot.height,
         scale,
+        dockScale,
 
-        dockX: logoRect
-          ? logoRect.right + LOGO_GAP - slot.left
-          : 0,
+        dockX: dockLeft - slot.left,
 
         hamburgerY:
           HAMBURGER_TOP - hamburgerVisibleTop
@@ -277,7 +310,11 @@ export function createSectionTransition({
         ? geometry.hamburgerY
         : 0;
 
-      return `translateY(${y}px) scale(${geometry.scale})`;
+      const scale = docked
+        ? geometry.scale * geometry.dockScale
+        : geometry.scale;
+
+      return `translateY(${y}px) scale(${scale})`;
     }
 
     async function showScreen(
@@ -317,7 +354,7 @@ export function createSectionTransition({
         `translate(0px, ${geometry.endY}px)`;
 
       const headingDocked =
-        `translate(${geometry.dockX}px, ${geometry.endY}px)`;
+        `translate(${geometry.dockX}px, ${geometry.endY}px) scale(${geometry.dockScale})`;
 
       const menuExpanded =
         'translateY(0px) scale(1)';
@@ -325,8 +362,7 @@ export function createSectionTransition({
       const menuCollapsed =
         `translateY(0px) scale(${geometry.scale})`;
 
-      const menuDocked =
-        `translateY(${geometry.hamburgerY}px) scale(${geometry.scale})`;
+      const menuDocked = menuTransform(true);
 
       if (immediately || reducedMotion.matches) {
         heading.style.transform = headingDocked;

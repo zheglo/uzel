@@ -301,11 +301,17 @@
 
 <style>
 	.composition {
+		--composition-width: min(902px, 35.234375vw);
+
 		position: absolute;
 		inset-block: 0;
-		left: 50%;
-		width: min(902px, 35.234375vw);
-		transform: translateX(-50%);
+
+		width: var(--composition-width);
+		left: calc(
+			60% - var(--composition-width) * 706 / 902
+		);
+
+		transform: none;
 		container-type: inline-size;
 		pointer-events: none;
 	}
@@ -451,11 +457,12 @@
 	}
 
 	@media (max-width: 600px) and (orientation: portrait) {
+
 		.composition {
-			width: 60vw;
+			--composition-width: 211.40625px;
 		}
 
-		.hero-left {
+	.hero-left {
 			/*
 			* Новая высота лого:
 			* ширина композиции × 196 / 902.

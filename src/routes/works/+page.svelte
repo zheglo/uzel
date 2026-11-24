@@ -1,5 +1,5 @@
 <section
-  id="about"
+  id="works"
   class="relative min-h-[100dvh] overflow-hidden"
   aria-label="О нас"
 >
@@ -9,7 +9,7 @@
   ></div>
 
   <div
-    class="absolute inset-y-0 right-0 w-[40%] bg-[#D0D3D0]"
+    class="absolute inset-y-0 right-0 w-[40%] bg-[#D0D3D1]"
     aria-hidden="true"
   ></div>
 

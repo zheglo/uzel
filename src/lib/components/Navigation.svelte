@@ -199,6 +199,7 @@
     visibility: hidden;
     pointer-events: auto;
     background-color: #fff;
+    transform-origin: top left;
   }
 
   .navigation-heading-letters {
