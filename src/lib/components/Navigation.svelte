@@ -45,15 +45,21 @@
   {@attach sectionTransition}
 >
   <div
+    data-navigation-backdrop
+    class="pointer-events-none absolute inset-0 z-0 bg-black opacity-0"
+    aria-hidden="true"
+  ></div>
+
+  <div
     data-navigation-position
-    class="absolute left-1/2 top-[40%] w-[min(430px,90cqw)] -translate-x-1/2 -translate-y-1/2"
+    class="absolute left-1/2 top-[40%] z-[1] w-[calc(100cqw*430/488)] -translate-x-1/2 -translate-y-1/2"
     style:opacity={navigationIntro.opacity}
     inert={navigationIntro.opacity === 0}
   >
     <div
       id="navigation-menu"
       data-navigation-body
-      class="navigation-body flex flex-col gap-[min(58px,calc(90cqw*58/430))]"
+      class="navigation-body flex flex-col gap-[calc(100cqw*58/488)]"
     >
       {#each navigation as item (item.href)}
         <div

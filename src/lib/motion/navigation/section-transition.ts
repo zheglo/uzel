@@ -9,6 +9,7 @@ const CLOSE_DURATION = 0.4;
 const OPEN_DURATION = 0.6;
 const RAISE_DURATION = 1.0;
 const DOCK_DURATION = 0.8;
+const BACKDROP_OPACITY = 0.45;
 
 const FULL = 'inset(0% 0% 0% 0%)';
 const CLOSED = 'inset(50% 0% 50% 0%)';
@@ -41,6 +42,10 @@ export function createSectionTransition({
 
     const body = navigation.querySelector<HTMLElement>(
       '[data-navigation-body]'
+    );
+
+    const backdropElement = navigation.querySelector<HTMLElement>(
+      '[data-navigation-backdrop]'
     );
 
     const toggleElement =
@@ -86,6 +91,7 @@ export function createSectionTransition({
 
     if (
       !body ||
+      !backdropElement ||
       !toggleElement ||
       !hero ||
       !firstScreen ||
@@ -101,6 +107,7 @@ export function createSectionTransition({
 
     const menu = body;
     const toggle = toggleElement;
+    const backdrop = backdropElement;
 
     const reducedMotion = window.matchMedia(
       '(prefers-reduced-motion: reduce)'
@@ -133,6 +140,35 @@ export function createSectionTransition({
       animations.length = 0;
     }
 
+    function animateBackdrop(
+      opacity: number,
+      duration: number
+    ) {
+      const from = Number.parseFloat(
+        getComputedStyle(backdrop).opacity
+      );
+
+      // Базовое состояние сохранится после отмены анимаций.
+      backdrop.style.opacity = String(opacity);
+
+      if (reducedMotion.matches) {
+        return;
+      }
+
+      const animation = animate(
+        backdrop,
+        {
+          opacity: [from, opacity]
+        },
+        {
+          duration,
+          ease: 'easeInOut'
+        }
+      );
+
+      animations.push(animation);
+    }
+
     function resetMenu() {
       menu.inert = false;
       menu.style.transform = 'translateY(0px) scale(1)';
@@ -161,6 +197,7 @@ export function createSectionTransition({
 
     function restoreHero() {
       stopAnimations();
+      backdrop.style.opacity = '0';
 
       menuState = 'hero';
       screenGeometry = null;
@@ -322,6 +359,7 @@ export function createSectionTransition({
       immediately: boolean
     ) {
       stopAnimations();
+      backdrop.style.opacity = '0';
       resetMenu();
       hideHeadings();
 
@@ -333,6 +371,10 @@ export function createSectionTransition({
       const geometry = getGeometry(index);
 
       screenGeometry = geometry;
+      document.documentElement.style.setProperty(
+        '--hamburger-height',
+        `${geometry.height * geometry.dockScale}px`
+      );
       currentIndex = index;
 
       heading.style.left = `${geometry.left}px`;
@@ -550,6 +592,11 @@ export function createSectionTransition({
 
         showMenuLetters();
 
+        animateBackdrop(
+          BACKDROP_OPACITY,
+          OPEN_DURATION
+        );
+
         const unfold = animate(
           slots,
           {
@@ -575,6 +622,8 @@ export function createSectionTransition({
         }
 
         showMenuLetters();
+
+        backdrop.style.opacity = String(BACKDROP_OPACITY);
       }
 
       menuState = 'open';
@@ -613,6 +662,7 @@ export function createSectionTransition({
         'translateY(0px) scale(1)';
 
       stopAnimations();
+      backdrop.style.opacity = '0';
 
       const token = revision;
 
@@ -744,6 +794,7 @@ export function createSectionTransition({
       }
 
       if (!reducedMotion.matches) {
+        animateBackdrop(0, CLOSE_DURATION);
         const close = animate(
           slots,
           {
@@ -794,6 +845,8 @@ export function createSectionTransition({
 
         if (token !== revision) return;
       } else {
+        backdrop.style.opacity = '0';
+
         hideMenuLetters();
 
         for (const slot of slots) {
@@ -1014,6 +1067,7 @@ export function createSectionTransition({
 
     return () => {
       stopAnimations();
+      backdrop.style.opacity = '0';
       hideToggle();
 
       clearTimeout(settleTimer);
@@ -1027,6 +1081,7 @@ export function createSectionTransition({
 
       resetMenu();
       hideHeadings();
+      document.documentElement.style.removeProperty('--hamburger-height');
     };
   };
 }
