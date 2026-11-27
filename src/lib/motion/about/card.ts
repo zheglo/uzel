@@ -8,8 +8,6 @@ const NARROW_QUERY = '(max-width: 767px)';
 
 const PLATE_LEFT =
   'calc(-1 * (var(--card-side) + var(--screen-line-width)))';
-// Плашка не оставляет полоски на линии, когда правая часть уходит за экран.
-const PLATE_RETRACT = 'calc(-1 * var(--card-side))';
 
 const PANEL_HIDDEN = 'inset(0 0 0 100%)';
 const PANEL_VISIBLE = 'inset(0 0 0 0)';
@@ -19,6 +17,9 @@ const MARK_VISIBLE = 'translateY(0%)';
 
 const LEFT_WIDTH = '60%';
 const LEFT_WIDTH_FULL = '100%';
+
+const RIGHT_SHIFT = 'translateX(100%)';
+const RIGHT_HOME = 'translateX(0%)';
 
 interface AboutCardElements {
   panel: HTMLElement;
@@ -33,13 +34,33 @@ interface ActiveCard extends AboutCardElements {
   mark: HTMLElement;
 }
 
+// 0 — закрыто, 1 — плашка, 2 — панель и ×, 3 — левая часть расширена.
+type Stage = 0 | 1 | 2 | 3;
+
+function lockPageScroll(panel: HTMLElement) {
+  const block = (event: Event) => {
+    if (event.target instanceof Node && panel.contains(event.target)) return;
+    event.preventDefault();
+  };
+
+  window.addEventListener('wheel', block, { passive: false });
+  window.addEventListener('touchmove', block, { passive: false });
+
+  return () => {
+    window.removeEventListener('wheel', block);
+    window.removeEventListener('touchmove', block);
+  };
+}
+
 export function createAboutCardTransition() {
   let active: ActiveCard | null = null;
   let closing = false;
-  let extended = false;
+  let stage: Stage = 0;
   let revision = 0;
+  let unlockScroll: (() => void) | null = null;
 
   const animations: Array<{ cancel: () => void }> = [];
+  const options = { duration: DURATION, ease: EASE };
 
   const reducedMotion = () =>
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -56,50 +77,69 @@ export function createAboutCardTransition() {
     animations.length = 0;
   }
 
+  async function play(list: Array<ReturnType<typeof animate>>) {
+    animations.push(...list);
+    await Promise.all(list);
+  }
+
+  function applyPlate(card: ActiveCard) {
+    card.plate.style.left = PLATE_LEFT;
+  }
+
+  function applyPanel(card: ActiveCard) {
+    card.panel.style.clipPath = PANEL_VISIBLE;
+    card.mark.style.transform = MARK_VISIBLE;
+  }
+
+  function applyExtend(card: ActiveCard) {
+    card.leftPart.style.width = LEFT_WIDTH_FULL;
+    card.rightPart.style.transform = RIGHT_SHIFT;
+    card.rightPart.inert = true;
+  }
+
   function restore(card: ActiveCard) {
+    unlockScroll?.();
+    unlockScroll = null;
+
     card.shell.style.removeProperty('z-index');
     card.plate.style.removeProperty('left');
     card.leftPart.style.removeProperty('width');
     card.rightPart.style.removeProperty('transform');
-    card.rightPart.style.removeProperty('visibility');
     card.rightPart.inert = false;
     card.panel.style.clipPath = PANEL_HIDDEN;
+    card.panel.scrollTop = 0;
     card.mark.style.transform = MARK_HIDDEN;
     card.markBox.inert = true;
-    extended = false;
+    stage = 0;
   }
 
-  function applyExtended(card: ActiveCard) {
-    extended = true;
-    card.leftPart.style.width = LEFT_WIDTH_FULL;
-    card.rightPart.style.transform = 'translateX(100%)';
-    card.rightPart.style.visibility = 'hidden';
-    card.rightPart.inert = true;
-    card.plate.style.left = PLATE_RETRACT;
-  }
+  async function openSequence(card: ActiveCard, token: number) {
+    stage = 1;
+    applyPlate(card);
 
-  async function extend(card: ActiveCard, token: number) {
-    const options = { duration: DURATION, ease: EASE };
-
-    extended = true;
-    card.leftPart.style.width = LEFT_WIDTH_FULL;
-    card.rightPart.style.transform = 'translateX(100%)';
-    card.plate.style.left = PLATE_RETRACT;
-
-    const running = [
-      animate(card.leftPart, { width: [LEFT_WIDTH, LEFT_WIDTH_FULL] }, options),
-      animate(card.rightPart, { transform: ['translateX(0%)', 'translateX(100%)'] }, options),
-      animate(card.plate, { left: [PLATE_LEFT, PLATE_RETRACT] }, options)
-    ];
-
-    animations.push(...running);
-
-    await Promise.all(running);
+    await play([
+      animate(card.plate, { left: ['0px', PLATE_LEFT] }, options)
+    ]);
 
     if (token !== revision) return;
 
-    card.rightPart.style.visibility = 'hidden';
-    card.rightPart.inert = true;
+    stage = 2;
+    applyPanel(card);
+
+    await play([
+      animate(card.panel, { clipPath: [PANEL_HIDDEN, PANEL_VISIBLE] }, options),
+      animate(card.mark, { transform: [MARK_HIDDEN, MARK_VISIBLE] }, options)
+    ]);
+
+    if (token !== revision) return;
+
+    stage = 3;
+    applyExtend(card);
+
+    await play([
+      animate(card.leftPart, { width: [LEFT_WIDTH, LEFT_WIDTH_FULL] }, options),
+      animate(card.rightPart, { transform: [RIGHT_HOME, RIGHT_SHIFT] }, options)
+    ]);
   }
 
   function open(item: HTMLElement, elements: AboutCardElements): boolean {
@@ -130,40 +170,38 @@ export function createAboutCardTransition() {
     };
 
     active = card;
+    unlockScroll = lockPageScroll(panel);
 
     markBox.style.top = `${top}px`;
     markBox.inert = false;
-
     shell.style.zIndex = '30';
-    plate.style.left = PLATE_LEFT;
-    panel.style.clipPath = PANEL_VISIBLE;
-    mark.style.transform = MARK_VISIBLE;
 
     const isNarrow = narrow();
 
     if (reducedMotion()) {
-      if (isNarrow) applyExtended(card);
+      applyPlate(card);
+      applyPanel(card);
+
+      if (isNarrow) applyExtend(card);
+
+      stage = isNarrow ? 3 : 2;
       return true;
     }
 
-    const options = { duration: DURATION, ease: EASE };
+    if (isNarrow) {
+      void openSequence(card, revision);
+      return true;
+    }
 
-    const running = [
+    stage = 2;
+    applyPlate(card);
+    applyPanel(card);
+
+    animations.push(
       animate(plate, { left: ['0px', PLATE_LEFT] }, options),
       animate(panel, { clipPath: [PANEL_HIDDEN, PANEL_VISIBLE] }, options),
       animate(mark, { transform: [MARK_HIDDEN, MARK_VISIBLE] }, options)
-    ];
-
-    animations.push(...running);
-
-    if (isNarrow) {
-      const token = revision;
-
-      void Promise.all(running).then(() => {
-        if (token !== revision) return;
-        void extend(card, token);
-      });
-    }
+    );
 
     return true;
   }
@@ -176,69 +214,79 @@ export function createAboutCardTransition() {
     closing = true;
     card.markBox.inert = true;
 
-    const wasExtended = extended;
-    const options = { duration: DURATION, ease: EASE };
+    const startStage = stage;
 
     // Фактическое состояние сохраняем до отмены анимаций.
-    const fromExtended = {
+    const now = {
+      plate: getComputedStyle(card.plate).left,
+      clip: getComputedStyle(card.panel).clipPath,
+      mark: getComputedStyle(card.mark).transform,
       width: getComputedStyle(card.leftPart).width,
-      transform: getComputedStyle(card.rightPart).transform,
-      left: getComputedStyle(card.plate).left
+      right: getComputedStyle(card.rightPart).transform
     };
 
     stop();
 
-    let token = revision;
+    const token = revision;
 
-    if (wasExtended && !reducedMotion()) {
-      card.rightPart.style.removeProperty('visibility');
-      card.rightPart.inert = false;
-      card.leftPart.style.width = LEFT_WIDTH;
-      card.rightPart.style.transform = 'translateX(0%)';
-      card.plate.style.left = PLATE_LEFT;
-
-      const retract = [
-        animate(card.leftPart, { width: [fromExtended.width, LEFT_WIDTH] }, options),
-        animate(card.rightPart, { transform: [fromExtended.transform, 'translateX(0%)'] }, options),
-        animate(card.plate, { left: [fromExtended.left, PLATE_LEFT] }, options)
-      ];
-
-      animations.push(...retract);
-
-      await Promise.all(retract);
-
-      if (token !== revision) return;
-    } else if (wasExtended) {
-      card.rightPart.style.removeProperty('visibility');
-      card.rightPart.inert = false;
-    }
-
-    // Состояние для второй фазы читаем после первой.
-    const from = {
-      left: getComputedStyle(card.plate).left,
-      clip: getComputedStyle(card.panel).clipPath,
-      transform: getComputedStyle(card.mark).transform
-    };
+    // Фиксируем фактические значения, чтобы не было скачков.
+    card.plate.style.left = now.plate;
+    card.panel.style.clipPath = now.clip;
+    card.mark.style.transform = now.mark;
+    card.leftPart.style.width = now.width;
+    card.rightPart.style.transform = now.right;
 
     if (!reducedMotion()) {
-      stop();
-      token = revision;
+      const reversePanel = () => {
+        card.panel.style.clipPath = PANEL_HIDDEN;
+        card.mark.style.transform = MARK_HIDDEN;
 
-      card.plate.style.left = '0px';
-      card.panel.style.clipPath = PANEL_HIDDEN;
-      card.mark.style.transform = MARK_HIDDEN;
+        return play([
+          animate(card.panel, { clipPath: [now.clip, PANEL_HIDDEN] }, options),
+          animate(card.mark, { transform: [now.mark, MARK_HIDDEN] }, options)
+        ]);
+      };
 
-      const running = [
-        animate(card.plate, { left: [from.left, '0px'] }, options),
-        animate(card.panel, { clipPath: [from.clip, PANEL_HIDDEN] }, options),
-        animate(card.mark, { transform: [from.transform, MARK_HIDDEN] }, options)
-      ];
+      const reversePlate = () => {
+        card.plate.style.left = '0px';
 
-      animations.push(...running);
+        return play([
+          animate(card.plate, { left: [now.plate, '0px'] }, options)
+        ]);
+      };
 
-      await Promise.all(running);
+      const reverseExtend = () => {
+        card.rightPart.inert = false;
+        card.leftPart.style.width = LEFT_WIDTH;
+        card.rightPart.style.transform = RIGHT_HOME;
 
-      if (token !== revision) return;
+        return play([
+          animate(card.leftPart, { width: [now.width, LEFT_WIDTH] }, options),
+          animate(card.rightPart, { transform: [now.right, RIGHT_HOME] }, options)
+        ]);
+      };
+
+      if (startStage >= 3) {
+        await reversePanel();
+        if (token !== revision) return;
+
+        await reverseExtend();
+        if (token !== revision) return;
+
+        await reversePlate();
+        if (token !== revision) return;
+      } else if (startStage === 2 && !narrow()) {
+        await Promise.all([reversePanel(), reversePlate()]);
+        if (token !== revision) return;
+      } else {
+        if (startStage >= 2) {
+          await reversePanel();
+          if (token !== revision) return;
+        }
+
+        await reversePlate();
+        if (token !== revision) return;
+      }
     }
 
     restore(card);
