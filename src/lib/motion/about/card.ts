@@ -21,6 +21,13 @@ const LEFT_WIDTH_FULL = '100%';
 const RIGHT_SHIFT = 'translateX(100%)';
 const RIGHT_HOME = 'translateX(0%)';
 
+const MARK_SCALE = 2;
+const BOX_HOME = 'scale(1)';
+const BOX_SCALED = `scale(${MARK_SCALE})`;
+// 0 — закрыто, 1 — плашка, 2 — панель и ×,
+// 3 — левая часть расширена, 4 — × увеличен.
+type Stage = 0 | 1 | 2 | 3 | 4;
+
 interface AboutCardElements {
   panel: HTMLElement;
   markBox: HTMLElement;
@@ -97,6 +104,11 @@ export function createAboutCardTransition() {
     card.rightPart.inert = true;
   }
 
+  function applyScale(card: ActiveCard) {
+    card.markBox.style.transformOrigin = 'top right';
+    card.markBox.style.transform = BOX_SCALED;
+  }
+
   function restore(card: ActiveCard) {
     unlockScroll?.();
     unlockScroll = null;
@@ -139,6 +151,16 @@ export function createAboutCardTransition() {
     await play([
       animate(card.leftPart, { width: [LEFT_WIDTH, LEFT_WIDTH_FULL] }, options),
       animate(card.rightPart, { transform: [RIGHT_HOME, RIGHT_SHIFT] }, options)
+    ]);
+
+    if (token !== revision) return;
+
+    stage = 4;
+    card.markBox.style.transformOrigin = 'top right';
+    card.markBox.style.transform = BOX_SCALED;
+
+    await play([
+      animate(card.markBox, { transform: [BOX_HOME, BOX_SCALED] }, options)
     ]);
   }
 
@@ -189,9 +211,12 @@ export function createAboutCardTransition() {
     }
 
     if (isNarrow) {
-      void openSequence(card, revision);
-      return true;
+      applyExtend(card);
+      applyScale(card);
     }
+
+    stage = isNarrow ? 4 : 2;
+    return true;
 
     stage = 2;
     applyPlate(card);
@@ -222,7 +247,8 @@ export function createAboutCardTransition() {
       clip: getComputedStyle(card.panel).clipPath,
       mark: getComputedStyle(card.mark).transform,
       width: getComputedStyle(card.leftPart).width,
-      right: getComputedStyle(card.rightPart).transform
+      right: getComputedStyle(card.rightPart).transform,
+      box: getComputedStyle(card.markBox).transform
     };
 
     stop();
@@ -235,11 +261,20 @@ export function createAboutCardTransition() {
     card.mark.style.transform = now.mark;
     card.leftPart.style.width = now.width;
     card.rightPart.style.transform = now.right;
+    card.markBox.style.transform = now.box;
 
     if (!reducedMotion()) {
       const reversePanel = () => {
         card.panel.style.clipPath = PANEL_HIDDEN;
         card.mark.style.transform = MARK_HIDDEN;
+
+      const reverseScale = () => {
+        card.markBox.style.transform = BOX_HOME;
+
+        return play([
+          animate(card.markBox, { transform: [now.box, BOX_HOME] }, options)
+        ]);
+      };
 
         return play([
           animate(card.panel, { clipPath: [now.clip, PANEL_HIDDEN] }, options),
@@ -267,6 +302,10 @@ export function createAboutCardTransition() {
       };
 
       if (startStage >= 3) {
+        if (startStage >= 4) {
+          await reverseScale();
+          if (token !== revision) return;
+        }
         await reversePanel();
         if (token !== revision) return;
 
@@ -292,7 +331,9 @@ export function createAboutCardTransition() {
     restore(card);
     active = null;
     closing = false;
-  }
+    card.markBox.style.removeProperty('transform');
+    card.markBox.style.removeProperty('transform-origin');
+    }
 
   // Мгновенный сброс без анимации.
   function reset() {
