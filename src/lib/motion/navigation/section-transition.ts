@@ -11,6 +11,14 @@ const RAISE_DURATION = 1.0;
 const DOCK_DURATION = 0.8;
 const BACKDROP_OPACITY = 0.45;
 
+// Полная последовательность открытия: опускание, сворачивание и раскрытие.
+const OPEN_BACKDROP_DURATION =
+  DOCK_DURATION + CLOSE_DURATION + OPEN_DURATION;
+
+// Полная последовательность закрытия с подъёмом гамбургера.
+const CLOSE_BACKDROP_DURATION =
+  CLOSE_DURATION + OPEN_DURATION + DOCK_DURATION;
+
 const FULL = 'inset(0% 0% 0% 0%)';
 const CLOSED = 'inset(50% 0% 50% 0%)';
 const STRIP = 'inset(25% 0% 25% 0%)';
@@ -542,6 +550,11 @@ export function createSectionTransition({
 
       if (!reducedMotion.matches) {
         // Гамбургер возвращается в исходную область меню.
+        animateBackdrop(
+          BACKDROP_OPACITY,
+          OPEN_BACKDROP_DURATION
+        );
+
         const lower = animate(
           menu,
           {
@@ -591,11 +604,6 @@ export function createSectionTransition({
         if (token !== revision) return;
 
         showMenuLetters();
-
-        animateBackdrop(
-          BACKDROP_OPACITY,
-          OPEN_DURATION
-        );
 
         const unfold = animate(
           slots,
@@ -794,7 +802,12 @@ export function createSectionTransition({
       }
 
       if (!reducedMotion.matches) {
-        animateBackdrop(0, CLOSE_DURATION);
+        animateBackdrop(
+          0,
+          href === '#hero'
+            ? CLOSE_DURATION
+            : CLOSE_BACKDROP_DURATION
+        );
         const close = animate(
           slots,
           {
