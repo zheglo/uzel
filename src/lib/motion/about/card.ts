@@ -24,9 +24,6 @@ const RIGHT_HOME = 'translateX(0%)';
 const MARK_SCALE = 2;
 const BOX_HOME = 'scale(1)';
 const BOX_SCALED = `scale(${MARK_SCALE})`;
-// 0 — закрыто, 1 — плашка, 2 — панель и ×,
-// 3 — левая часть расширена, 4 — × увеличен.
-type Stage = 0 | 1 | 2 | 3 | 4;
 
 interface AboutCardElements {
   panel: HTMLElement;
@@ -41,8 +38,9 @@ interface ActiveCard extends AboutCardElements {
   mark: HTMLElement;
 }
 
-// 0 — закрыто, 1 — плашка, 2 — панель и ×, 3 — левая часть расширена.
-type Stage = 0 | 1 | 2 | 3;
+// 0 — закрыто, 1 — плашка, 2 — панель и ×,
+// 3 — левая часть расширена, 4 — × увеличен.
+type Stage = 0 | 1 | 2 | 3 | 4;
 
 function lockPageScroll(panel: HTMLElement) {
   const block = (event: Event) => {
@@ -121,6 +119,8 @@ export function createAboutCardTransition() {
     card.panel.style.clipPath = PANEL_HIDDEN;
     card.panel.scrollTop = 0;
     card.mark.style.transform = MARK_HIDDEN;
+    card.markBox.style.removeProperty('transform');
+    card.markBox.style.removeProperty('transform-origin');
     card.markBox.inert = true;
     stage = 0;
   }
@@ -156,8 +156,7 @@ export function createAboutCardTransition() {
     if (token !== revision) return;
 
     stage = 4;
-    card.markBox.style.transformOrigin = 'top right';
-    card.markBox.style.transform = BOX_SCALED;
+    applyScale(card);
 
     await play([
       animate(card.markBox, { transform: [BOX_HOME, BOX_SCALED] }, options)
@@ -204,19 +203,19 @@ export function createAboutCardTransition() {
       applyPlate(card);
       applyPanel(card);
 
-      if (isNarrow) applyExtend(card);
+      if (isNarrow) {
+        applyExtend(card);
+        applyScale(card);
+      }
 
-      stage = isNarrow ? 3 : 2;
+      stage = isNarrow ? 4 : 2;
       return true;
     }
 
     if (isNarrow) {
-      applyExtend(card);
-      applyScale(card);
+      void openSequence(card, revision);
+      return true;
     }
-
-    stage = isNarrow ? 4 : 2;
-    return true;
 
     stage = 2;
     applyPlate(card);
@@ -264,10 +263,6 @@ export function createAboutCardTransition() {
     card.markBox.style.transform = now.box;
 
     if (!reducedMotion()) {
-      const reversePanel = () => {
-        card.panel.style.clipPath = PANEL_HIDDEN;
-        card.mark.style.transform = MARK_HIDDEN;
-
       const reverseScale = () => {
         card.markBox.style.transform = BOX_HOME;
 
@@ -275,6 +270,10 @@ export function createAboutCardTransition() {
           animate(card.markBox, { transform: [now.box, BOX_HOME] }, options)
         ]);
       };
+
+      const reversePanel = () => {
+        card.panel.style.clipPath = PANEL_HIDDEN;
+        card.mark.style.transform = MARK_HIDDEN;
 
         return play([
           animate(card.panel, { clipPath: [now.clip, PANEL_HIDDEN] }, options),
@@ -306,6 +305,7 @@ export function createAboutCardTransition() {
           await reverseScale();
           if (token !== revision) return;
         }
+
         await reversePanel();
         if (token !== revision) return;
 
@@ -331,9 +331,7 @@ export function createAboutCardTransition() {
     restore(card);
     active = null;
     closing = false;
-    card.markBox.style.removeProperty('transform');
-    card.markBox.style.removeProperty('transform-origin');
-    }
+  }
 
   // Мгновенный сброс без анимации.
   function reset() {
